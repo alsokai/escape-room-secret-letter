@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ห้องปริศนา</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inknut+Antiqua:wght@400;700&family=DM+Sans:wght@400;500;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:'DM Sans','Sarabun',sans-serif; color:#f7eeee; background:#09090b; }
+    .app-wrapper { min-height:100vh; background:radial-gradient(ellipse at 50% 5%,#471016 0%,#180c10 34%,#09090b 78%); position:relative; overflow:hidden; }
+    .app-wrapper:before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.27; background:repeating-linear-gradient(90deg,transparent 0,transparent 69px,#6e2228 70px,transparent 71px),linear-gradient(160deg,transparent 48%,#4b1219 49%,transparent 50%); mask-image:linear-gradient(#000,transparent 85%); -webkit-mask-image:linear-gradient(#000,transparent 85%); }
+    .ornament { width:72px;height:72px;border:1px solid #a24a52;border-radius:50%;display:grid;place-items:center;margin:0 auto 18px;color:#e8a5a5;box-shadow:0 0 30px #9b152344;font-family:'Inknut Antiqua',serif;font-size:32px; }
+    .game-card { background:#151316;border:1px solid #87303b;box-shadow:0 24px 80px #000a,0 0 45px #a7192a1b; }
+    .heading-font { font-family:'Inknut Antiqua','Sarabun',serif;line-height:1.45; }
+    .field { width:100%;background:#0c0c0e;border:1px solid #715058;border-radius:12px;color:#fff;padding:13px 16px;outline:none;font-size:16px;transition:border-color .2s,box-shadow .2s; }
+    .field:focus { border-color:#f4a5ae;box-shadow:0 0 0 3px #c42a3d55; }
+    .field::placeholder { color:#afa2a6; }
+    .masked { -webkit-text-security:disc; }
+    label { color:#f7eeee; font-size:15px; font-weight:600; }
+    button:focus-visible,input:focus-visible,textarea:focus-visible { outline:3px solid #ffd5d8;outline-offset:3px; }
+    .primary { background:#a7192a;color:#fff;font-weight:700;transition:background .2s,transform .2s; }
+    .primary:hover:not(:disabled) { background:#c8293e;transform:translateY(-1px); }
+    .secondary { border:1px solid #94525c;color:#ffe5e7;background:#27171b;font-size:14px; }
+    .secondary:hover:not(:disabled) { background:#452127; }
+    button:disabled { opacity:.55;cursor:wait; }
+    .shake { animation:shake .38s ease-in-out; }
+    @keyframes shake { 0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)} }
+    .reveal { animation:appear .5s ease-out both; }
+    @keyframes appear { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    @media (prefers-reduced-motion:reduce) { .shake,.reveal{animation:none!important} .primary{transition:none} }
+    .pic { display:block;max-width:100%;height:auto;margin:auto;border-radius:10px; }
+  </style>
+</head>
+<body>
+<div class="app-wrapper">
+  <header class="relative z-10 max-w-3xl mx-auto px-5 pt-8 sm:pt-12 text-center">
+    <div class="ornament" aria-hidden="true">✦</div>
+    <p class="tracking-[.28em] uppercase mb-2 text-xs font-bold text-[#e9aeb4]">overdose : คฤหาสน์วิปลาส</p>
+  </header>
+
+  <main class="relative z-10 max-w-3xl mx-auto px-4 pb-12 pt-5">
+    <!-- ผู้เล่น -->
+    <section id="game-card" class="game-card rounded-[24px] px-5 py-8 sm:px-12 sm:py-11">
+      <div class="text-center mb-8">
+        <h1 id="puzzle-title" class="heading-font font-bold break-words" style="font-size:clamp(1.5rem,4vw,2.25rem)">ประตูสีชาด</h1>
+        <div class="h-px w-20 bg-red-700 mx-auto my-5" aria-hidden="true"></div>
+        <p id="puzzle-clue" class="max-w-lg mx-auto leading-relaxed text-[#ead2d5] whitespace-pre-line">กำลังโหลดปริศนา…</p>
+      </div>
+      <form id="answer-form" class="max-w-md mx-auto mt-6 space-y-3" novalidate>
+        <label for="answer" class="sr-only">คำตอบ</label>
+        <input id="answer" class="field" type="text" autocomplete="off" placeholder="พิมพ์คำตอบของคุณ" aria-describedby="player-message">
+        <button id="check-button" type="submit" class="primary w-full rounded-xl px-6 py-3">ตรวจคำตอบ</button>
+      </form>
+      <p id="player-message" role="status" aria-live="polite" class="max-w-md mx-auto mt-4 text-center min-h-[1.5rem] text-[#ffb4bb]"></p>
+
+      <section id="reveal" class="hidden mt-7 rounded-2xl border border-[#b55963] bg-[#2b171c] p-5 sm:p-7 text-center" aria-label="ผลการปลดล็อก">
+        <h2 class="heading-font font-bold mb-2 text-2xl text-[#ffe1e4]">ปลดล็อกสำเร็จ</h2>
+        <p class="mb-5">คุณไขปริศนาได้แล้ว ภาพเฉลยอยู่ด้านล่าง</p>
+        <div class="rounded-xl border border-[#87545c] bg-[#100b0d] p-2">
+          <img id="reveal-img" class="pic hidden" alt="ภาพเฉลย">
+          <p id="no-picture" class="hidden text-[#f8d1d5] p-3"></p>
+        </div>
+      </section>
+    </section>
+
+    <!-- ตัวสร้างไฟล์ปริศนา -->
+    <aside id="setup-panel" class="hidden mt-5 rounded-2xl border border-[#87303b] bg-[#1c1519] p-5 sm:p-8 shadow-2xl" aria-labelledby="setup-heading">
+      <div class="flex items-start justify-between gap-4 mb-3">
+        <h2 id="setup-heading" class="heading-font font-bold text-2xl text-[#fff0f1]">สร้างไฟล์ปริศนา</h2>
+        <button id="close-setup" type="button" class="secondary rounded-lg px-3 py-2 shrink-0">ปิด</button>
+      </div>
+      <p class="text-sm leading-relaxed text-[#ddbdc1] mb-6">แผงนี้ไม่ได้แก้ไขอะไรบนเว็บ แต่จะสร้างไฟล์ <b>puzzle.json</b> ที่ล็อกภาพเฉลยด้วยคำตอบไว้ จากนั้นให้นำไฟล์ไปอัปโหลดแทนไฟล์เดิมใน GitHub ผู้เล่นที่เปิดแผงนี้ได้ก็เปลี่ยนปริศนาบนเว็บไม่ได้</p>
+
+      <form id="setup-form" class="space-y-5" novalidate>
+        <div>
+          <label for="edit-title" class="block mb-2">ชื่อปริศนา</label>
+          <input id="edit-title" class="field" type="text" maxlength="90">
+        </div>
+        <div>
+          <label for="edit-clue" class="block mb-2">คำใบ้</label>
+          <textarea id="edit-clue" class="field min-h-24 resize-y" maxlength="400"></textarea>
+        </div>
+        <div>
+          <label for="edit-secret" class="block mb-2">คำตอบที่ถูกต้อง <span class="font-normal text-sm text-[#d4b6bb]">(ไม่สนตัวพิมพ์เล็ก/ใหญ่)</span></label>
+          <div class="flex gap-2">
+            <input id="edit-secret" class="field masked min-w-0" type="text" maxlength="100" autocomplete="off" spellcheck="false">
+            <button id="toggle-secret" type="button" class="secondary rounded-xl px-4 shrink-0">แสดง / ซ่อน</button>
+          </div>
+          <p class="text-xs mt-2 text-[#d4b6bb]">ใช้คำตอบที่เดายาก อย่างน้อย 6 ตัวอักษร ห้ามเป็นตัวเลขสั้น ๆ</p>
+        </div>
+        <div>
+          <label for="edit-image" class="block mb-2">ภาพเฉลยจากอุปกรณ์</label>
+          <input id="edit-image" class="field file:mr-3 file:rounded-md file:border-0 file:bg-[#a7192a] file:px-3 file:py-1 file:text-white" type="file" accept="image/png,image/jpeg,image/webp">
+          <label for="edit-image-url" class="block mt-4 mb-2">หรือลิงก์ภาพสาธารณะ</label>
+          <div class="flex gap-2">
+            <input id="edit-image-url" class="field min-w-0" type="url" inputmode="url" placeholder="https://example.com/image.jpg" autocomplete="off">
+            <button id="verify-image-url" type="button" class="secondary rounded-xl px-4 shrink-0">ตรวจสอบภาพ</button>
+          </div>
+        </div>
+        <div id="preview-area" class="hidden rounded-xl border border-[#754550] p-3">
+          <h3 class="font-semibold mb-3 text-[#ffe5e7]">ตัวอย่างภาพเฉลย</h3>
+          <img id="preview-img" class="pic" alt="ตัวอย่างภาพเฉลย">
+          <button id="remove-image" type="button" class="secondary rounded-lg px-4 py-2 mt-3">นำภาพออก</button>
+        </div>
+        <p id="setup-message" role="status" aria-live="polite" class="min-h-[1.5rem] text-[#ffd0d4]"></p>
+        <button id="build-button" type="submit" class="primary rounded-xl px-6 py-3">สร้างและดาวน์โหลด puzzle.json</button>
+      </form>
+    </aside>
+  </main>
+
+  <footer class="relative z-10 text-center px-4 pb-7">
+    <p class="text-sm text-[#b9989e]">อ่านคำใบ้ให้ดี แล้วไขประตูด้วยคำตอบของคุณ</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const msg = (id, text) => { $(id).textContent = text; };
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+  const ITERATIONS = 600000; // ทำให้การเดาคำตอบด้วยโปรแกรมช้าลงมาก
+  let puzzle = null;
+  let draftImage = '';
+
+  // ===== เข้ารหัส / ถอดรหัส =====
+  const normalize = s => String(s ?? '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+
+  function toB64(buf) {
+    const bytes = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+      s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(s);
+  }
+  function fromB64(b64) {
+    const s = atob(b64);
+    const out = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+    return out;
+  }
+  async function deriveKey(answer, salt, iterations) {
+    const base = await crypto.subtle.importKey('raw', enc.encode(normalize(answer)), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+      base,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  // ===== ผู้เล่น =====
+  async function loadPuzzle() {
+    if (!window.crypto?.subtle) {
+      $('puzzle-clue').textContent = 'กรุณาเปิดหน้านี้ผ่านลิงก์ https://';
+      return;
+    }
+    try {
+      const res = await fetch('puzzle.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error(res.status === 404 ? 'missing' : 'error');
+      puzzle = await res.json();
+      $('puzzle-title').textContent = puzzle.title;
+      $('puzzle-clue').textContent = puzzle.clue;
+      document.title = 'ห้องปริศนา: ' + puzzle.title;
+    } catch (err) {
+      puzzle = null;
+      $('puzzle-clue').textContent = err.message === 'missing'
+        ? 'ยังไม่มีปริศนาที่ตั้งค่าไว้'
+        : 'ไม่สามารถโหลดปริศนาได้ กรุณาลองเปิดหน้าใหม่';
+    }
+  }
+
+  function lock() {
+    $('reveal').classList.add('hidden');
+    $('reveal-img').classList.add('hidden');
+    $('reveal-img').removeAttribute('src');
+    $('no-picture').classList.add('hidden');
+  }
+
+  function showReveal(image) {
+    const box = $('reveal');
+    box.classList.remove('hidden', 'reveal');
+    void box.offsetWidth;
+    box.classList.add('reveal');
+    const noPic = t => { msg('no-picture', t); $('no-picture').classList.remove('hidden'); };
+    if (!image) return noPic('ปลดล็อกแล้ว แต่ยังไม่ได้ตั้งค่าภาพเฉลย');
+    const img = $('reveal-img');
+    img.onload = () => img.classList.remove('hidden');
+    img.onerror = () => noPic('ไม่สามารถแสดงภาพเฉลยได้');
+    img.src = image;
+  }
+
+  function shake() {
+    const card = $('game-card');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+  }
+
+  $('answer-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const answer = $('answer').value.trim();
+    if (answer.toLowerCase() === 'setup') {
+      $('answer').value = '';
+      msg('player-message', '');
+      return openSetup();
+    }
+    if (!answer) {
+      msg('player-message', 'กรุณากรอกคำตอบก่อนตรวจ');
+      return $('answer').focus();
+    }
+    if (!puzzle) return msg('player-message', 'ยังไม่มีปริศนาที่พร้อมเล่น');
+
+    $('check-button').disabled = true;
+    msg('player-message', 'กำลังตรวจ…');
+    try {
+      const key = await deriveKey(answer, fromB64(puzzle.salt), puzzle.iter);
+      const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromB64(puzzle.iv) }, key, fromB64(puzzle.data));
+      const secret = JSON.parse(dec.decode(plain));
+      msg('player-message', '');
+      showReveal(secret.image);
+    } catch {
+      // ถอดรหัสไม่ได้ = คำตอบผิด
+      lock();
+      shake();
+      msg('player-message', 'คำตอบยังไม่ถูกต้อง ลองใหม่อีกครั้ง');
+      $('answer').select();
+    } finally {
+      $('check-button').disabled = false;
+    }
+  });
+
+  // ===== ตัวสร้างไฟล์ =====
+  function openSetup() {
+    if (puzzle) {
+      $('edit-title').value = $('edit-title').value || puzzle.title;
+      $('edit-clue').value = $('edit-clue').value || puzzle.clue;
+    }
+    $('setup-panel').classList.remove('hidden');
+    $('setup-panel').scrollIntoView({ behavior: 'smooth' });
+    $('edit-title').focus();
+  }
+
+  $('close-setup').addEventListener('click', () => {
+    $('setup-panel').classList.add('hidden');
+    $('edit-secret').value = '';
+    $('edit-secret').classList.add('masked');
+    msg('setup-message', '');
+    $('answer').focus();
+  });
+
+  $('toggle-secret').addEventListener('click', () => {
+    const masked = $('edit-secret').classList.toggle('masked');
+    $('toggle-secret').setAttribute('aria-label', masked ? 'แสดงคำตอบ' : 'ซ่อนคำตอบ');
+  });
+
+  function drawPreview() {
+    $('preview-area').classList.toggle('hidden', !draftImage);
+    if (draftImage) $('preview-img').src = draftImage;
+    else $('preview-img').removeAttribute('src');
+  }
+
+  $('verify-image-url').addEventListener('click', () => {
+    const raw = $('edit-image-url').value.trim();
+    try {
+      const u = new URL(raw);
+      if (!['http:', 'https:'].includes(u.protocol)) throw 0;
+    } catch {
+      return msg('setup-message', 'กรุณาใส่ลิงก์ภาพที่ขึ้นต้นด้วย http:// หรือ https://');
+    }
+    msg('setup-message', 'กำลังตรวจสอบลิงก์ภาพ…');
+    const img = new Image();
+    img.onload = () => {
+      draftImage = raw;
+      $('edit-image').value = '';
+      drawPreview();
+      msg('setup-message', 'ลิงก์ใช้ได้');
+    };
+    img.onerror = () => msg('setup-message', 'เปิดลิงก์นี้ไม่ได้หรือไม่ใช่ไฟล์ภาพ');
+    img.src = raw;
+  });
+
+  $('edit-image').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      e.target.value = '';
+      return msg('setup-message', 'กรุณาเลือกไฟล์ PNG, JPG หรือ WebP');
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      draftImage = canvas.toDataURL('image/jpeg', 0.8);
+      $('edit-image-url').value = '';
+      drawPreview();
+      msg('setup-message', 'เลือกภาพแล้ว');
+    } catch {
+      msg('setup-message', 'ไม่สามารถอ่านภาพนี้ได้ กรุณาลองภาพอื่น');
+    }
+  });
+
+  $('remove-image').addEventListener('click', () => {
+    draftImage = '';
+    $('edit-image').value = '';
+    $('edit-image-url').value = '';
+    drawPreview();
+    msg('setup-message', 'นำภาพออกแล้ว');
+  });
+
+  $('setup-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const title = $('edit-title').value.trim();
+    const clue = $('edit-clue').value.trim();
+    const secret = $('edit-secret').value.trim();
+    if (!title || !clue || !secret) return msg('setup-message', 'กรุณากรอกชื่อปริศนา คำใบ้ และคำตอบให้ครบ');
+    if (normalize(secret) === 'setup') return msg('setup-message', 'ห้ามใช้คำว่า setup เป็นคำตอบ');
+    if (!window.crypto?.subtle) return msg('setup-message', 'กรุณาเปิดหน้านี้ผ่านลิงก์ https://');
+
+    $('build-button').disabled = true;
+    msg('setup-message', 'กำลังเข้ารหัส…');
+    try {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKey(secret, salt, ITERATIONS);
+      const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify({ image: draftImage })));
+      const out = { v: 1, title, clue, iter: ITERATIONS, salt: toB64(salt), iv: toB64(iv), data: toB64(data) };
+
+      const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'puzzle.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      msg('setup-message', 'ดาวน์โหลด puzzle.json แล้ว นำไปอัปโหลดแทนไฟล์เดิมใน GitHub ได้เลย');
+    } catch {
+      msg('setup-message', 'สร้างไฟล์ไม่สำเร็จ กรุณาลองใหม่');
+    } finally {
+      $('build-button').disabled = false;
+    }
+  });
+
+  loadPuzzle();
+})();
+</script>
+</body>
+</html>
